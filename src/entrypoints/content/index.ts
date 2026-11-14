@@ -4,6 +4,8 @@ import { toPageKey } from "@/lib/url";
 import DuplicateToast from "./DuplicateToast.svelte";
 
 const DISMISSED_KEY_PREFIX = "tab-dedup:dismissed:";
+/** The toast closes itself after this much time without hover or focus. */
+const AUTO_DISMISS_MS = 8000;
 
 /**
  * Sends a typed message to the background script.
@@ -63,6 +65,7 @@ export default defineContentScript({
           target: container,
           props: {
             duplicates,
+            autoDismissMs: AUTO_DISMISS_MS,
             onSwitch: () => {
               void sendMessage({ type: "switch-to-existing", targetTabId: primary.id });
             },
@@ -74,6 +77,9 @@ export default defineContentScript({
               markDismissed(pageKey);
               ui.remove();
             },
+            // Not marked as dismissed: timing out is not an explicit choice,
+            // so a reload should offer the dialog again.
+            onTimeout: () => ui.remove(),
           },
         });
       },

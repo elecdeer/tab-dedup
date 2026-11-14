@@ -1,18 +1,50 @@
 <script lang="ts">
   import type { DuplicateTab } from "@/lib/duplicates";
+  import { startPausableTimer, type PausableTimer } from "@/lib/pausable-timer";
 
   interface Props {
     duplicates: DuplicateTab[];
+    /** How long the toast stays up without interaction before `onTimeout` fires. */
+    autoDismissMs: number;
     onSwitch: () => void;
     onCloseOthers: () => void;
     onDismiss: () => void;
+    onTimeout: () => void;
   }
 
-  const { duplicates, onSwitch, onCloseOthers, onDismiss }: Props = $props();
+  const { duplicates, autoDismissMs, onSwitch, onCloseOthers, onDismiss, onTimeout }: Props =
+    $props();
+
+  let toast: HTMLDivElement;
+  let timer: PausableTimer | undefined;
+
+  $effect(() => {
+    const current = startPausableTimer(autoDismissMs, () => onTimeout());
+    timer = current;
+    return () => current.cancel();
+  });
+
+  /**
+   * Resumes the timer only when focus actually leaves the toast,
+   * not when it just moves between its buttons.
+   */
+  function handleFocusOut(event: FocusEvent): void {
+    if (event.relatedTarget instanceof Node && toast.contains(event.relatedTarget)) return;
+    timer?.resume("focus");
+  }
 </script>
 
 <!-- Not a modal: it must not block the page or steal focus, so no backdrop and no autofocus. -->
-<div class="toast" role="status" aria-live="polite">
+<div
+  class="toast"
+  role="status"
+  aria-live="polite"
+  bind:this={toast}
+  onmouseenter={() => timer?.pause("hover")}
+  onmouseleave={() => timer?.resume("hover")}
+  onfocusin={() => timer?.pause("focus")}
+  onfocusout={handleFocusOut}
+>
   <div class="header">
     <span class="title">
       {duplicates.length === 1 ? "別のタブで開かれています" : `${duplicates.length} 個の別のタブで開かれています`}
