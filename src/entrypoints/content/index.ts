@@ -1,7 +1,7 @@
 import { mount, unmount } from "svelte";
 import type { CheckDuplicatesResponse, Message } from "@/lib/messages";
 import { toPageKey } from "@/lib/url";
-import DuplicateDialog from "./DuplicateDialog.svelte";
+import DuplicateToast from "./DuplicateToast.svelte";
 
 const DISMISSED_KEY_PREFIX = "tab-dedup:dismissed:";
 
@@ -52,11 +52,14 @@ export default defineContentScript({
     if (primary === undefined) return;
 
     const ui = await createShadowRootUi(ctx, {
-      name: "tab-dedup-dialog",
-      position: "modal",
-      zIndex: 2147483647,
+      name: "tab-dedup-toast",
+      // The toast positions itself with `position: fixed`; "inline" keeps WXT from adding
+      // a full-page wrapper that would cover (and block clicks on) the page.
+      position: "inline",
+      anchor: "body",
+      append: "last",
       onMount(container) {
-        return mount(DuplicateDialog, {
+        return mount(DuplicateToast, {
           target: container,
           props: {
             duplicates,
