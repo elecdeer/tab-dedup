@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { toPageKey } from "./url";
+import { toOrigin, toPageKey } from "./url";
 
 describe("toPageKey", () => {
   it("keeps origin and pathname", () => {
@@ -23,5 +23,17 @@ describe("toPageKey", () => {
   it("returns null for undefined or unparsable input", () => {
     expect(toPageKey(undefined)).toBeNull();
     expect(toPageKey("not a url")).toBeNull();
+  });
+});
+
+describe("toOrigin", () => {
+  it("keeps scheme, host and port only", () => {
+    expect(toOrigin("https://example.com:8443/foo?a=1#top")).toBe("https://example.com:8443");
+  });
+
+  it("returns null for non-http(s), undefined or unparsable input", () => {
+    expect(toOrigin("chrome://extensions/")).toBeNull();
+    expect(toOrigin(undefined)).toBeNull();
+    expect(toOrigin("not a url")).toBeNull();
   });
 });

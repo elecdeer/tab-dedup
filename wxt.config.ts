@@ -9,6 +9,8 @@ export default defineConfig({
     description:
       "同じページが既に別のタブで開かれているとき、移動するか古いタブを閉じるかを選べます。",
     // `tabs` is required to read the URL of tabs other than the sender.
-    permissions: ["tabs"],
+    // `storage` holds the per-site rules; `sessions` restores tabs closed automatically
+    // (with their history) when the user clicks "undo".
+    permissions: ["tabs", "storage", "sessions"],
   },
 });

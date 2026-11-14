@@ -1,3 +1,4 @@
+import type { SearchScope } from "./settings";
 import { toPageKey } from "./url";
 
 /** The subset of a browser tab needed for duplicate detection. */
@@ -7,6 +8,20 @@ export interface TabLike {
   title?: string;
   windowId?: number;
   lastAccessed?: number;
+  pinned?: boolean;
+}
+
+/** The tab whose duplicates are being looked for. */
+export interface CurrentTab {
+  id: number;
+  url: string;
+  windowId: number;
+}
+
+/** Which tabs may count as duplicates. */
+export interface DuplicateFilter {
+  scope: SearchScope;
+  includePinned: boolean;
 }
 
 /** A tab that shows the same page as the current one. */
@@ -18,23 +33,25 @@ export interface DuplicateTab {
 }
 
 /**
- * Finds tabs other than `currentTabId` that show the same page as `currentUrl`.
+ * Finds tabs other than `current` that show the same page and pass `filter`.
  * The result is ordered by most recently accessed first, so `[0]` is the best tab to switch to.
  */
 export function findDuplicateTabs(
   tabs: readonly TabLike[],
-  currentTabId: number,
-  currentUrl: string,
+  current: CurrentTab,
+  filter: DuplicateFilter,
 ): DuplicateTab[] {
-  const key = toPageKey(currentUrl);
+  const key = toPageKey(current.url);
   if (key === null) return [];
 
   return tabs
     .filter(
       (tab): tab is TabLike & { id: number; url: string; windowId: number } =>
         tab.id !== undefined &&
-        tab.id !== currentTabId &&
+        tab.id !== current.id &&
         tab.windowId !== undefined &&
+        (filter.scope === "all-windows" || tab.windowId === current.windowId) &&
+        (filter.includePinned || tab.pinned !== true) &&
         toPageKey(tab.url) === key,
     )
     .toSorted((a, b) => (b.lastAccessed ?? 0) - (a.lastAccessed ?? 0))
