@@ -137,7 +137,8 @@ function showUndoToast(
 export default defineContentScript({
   matches: ["http://*/*", "https://*/*"],
   runAt: "document_idle",
-  cssInjectionMode: "ui",
+  // Toast.svelte injects its own styles into the shadow root; see the note there.
+  cssInjectionMode: "manual",
 
   async main(ctx) {
     // Registered before any early return: this tab may be the one an automatic switch lands on.

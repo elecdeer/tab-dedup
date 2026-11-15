@@ -1,3 +1,11 @@
+<!--
+  Styles are injected by Svelte into the shadow root this component is mounted in, instead of
+  WXT's cssInjectionMode "ui", which fetches content-scripts/content.css as a web-accessible
+  resource. Chrome blocks that fetch on some pages (e.g. YouTube: "Unsafe attempt to load URL"),
+  leaving the toast unstyled.
+-->
+<svelte:options css="injected" />
+
 <script lang="ts">
   import type { Snippet } from "svelte";
   import { startPausableTimer, type PausableTimer } from "@/lib/pausable-timer";
