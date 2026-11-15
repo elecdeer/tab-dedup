@@ -8,7 +8,11 @@ import {
 
 describe("findDuplicateTabs", () => {
   const current: CurrentTab = { id: 1, windowId: 10, url: "https://example.com/page?x=1" };
-  const everywhere: DuplicateFilter = { scope: "all-windows", includePinned: true };
+  const everywhere: DuplicateFilter = {
+    scope: "all-windows",
+    includePinned: true,
+    includeQuery: false,
+  };
 
   it("returns other tabs showing the same page, ignoring query and hash", () => {
     // Given
@@ -63,6 +67,21 @@ describe("findDuplicateTabs", () => {
       findDuplicateTabs(tabs, current, { ...everywhere, includePinned: false }).map((t) => t.id),
     ).toEqual([3]);
     expect(findDuplicateTabs(tabs, current, everywhere).map((t) => t.id)).toEqual([2, 3]);
+  });
+
+  it("requires the same query when includeQuery is set, regardless of parameter order", () => {
+    const withQuery: CurrentTab = { id: 1, windowId: 10, url: "https://example.com/watch?v=a&t=1" };
+    const tabs: TabLike[] = [
+      withQuery,
+      { id: 2, windowId: 10, url: "https://example.com/watch?t=1&v=a#top" },
+      { id: 3, windowId: 10, url: "https://example.com/watch?v=b&t=1" },
+      { id: 4, windowId: 10, url: "https://example.com/watch" },
+    ];
+
+    expect(
+      findDuplicateTabs(tabs, withQuery, { ...everywhere, includeQuery: true }).map((t) => t.id),
+    ).toEqual([2]);
+    expect(findDuplicateTabs(tabs, withQuery, everywhere).map((t) => t.id)).toEqual([2, 3, 4]);
   });
 
   it("falls back to the URL when the tab has no title", () => {

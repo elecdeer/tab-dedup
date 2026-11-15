@@ -22,6 +22,8 @@ export interface CurrentTab {
 export interface DuplicateFilter {
   scope: SearchScope;
   includePinned: boolean;
+  /** Whether a different query string makes a different page. */
+  includeQuery: boolean;
 }
 
 /** A tab that shows the same page as the current one. */
@@ -41,7 +43,8 @@ export function findDuplicateTabs(
   current: CurrentTab,
   filter: DuplicateFilter,
 ): DuplicateTab[] {
-  const key = toPageKey(current.url);
+  const keyOptions = { includeQuery: filter.includeQuery };
+  const key = toPageKey(current.url, keyOptions);
   if (key === null) return [];
 
   return tabs
@@ -52,7 +55,7 @@ export function findDuplicateTabs(
         tab.windowId !== undefined &&
         (filter.scope === "all-windows" || tab.windowId === current.windowId) &&
         (filter.includePinned || tab.pinned !== true) &&
-        toPageKey(tab.url) === key,
+        toPageKey(tab.url, keyOptions) === key,
     )
     .toSorted((a, b) => (b.lastAccessed ?? 0) - (a.lastAccessed ?? 0))
     .map((tab) => ({

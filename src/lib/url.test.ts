@@ -10,6 +10,15 @@ describe("toPageKey", () => {
     expect(toPageKey("https://example.com/foo?a=1#top")).toBe("https://example.com/foo");
   });
 
+  it("keeps the query with includeQuery, sorted by parameter name, still ignoring the hash", () => {
+    expect(toPageKey("https://example.com/foo?b=2&a=1#top", { includeQuery: true })).toBe(
+      "https://example.com/foo?a=1&b=2",
+    );
+    expect(toPageKey("https://example.com/foo", { includeQuery: true })).toBe(
+      "https://example.com/foo",
+    );
+  });
+
   it("distinguishes different ports and schemes", () => {
     expect(toPageKey("http://example.com/")).not.toBe(toPageKey("https://example.com/"));
     expect(toPageKey("https://example.com:8443/")).not.toBe(toPageKey("https://example.com/"));

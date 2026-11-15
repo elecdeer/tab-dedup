@@ -10,6 +10,8 @@ export interface Behavior {
   scope: SearchScope;
   /** Whether pinned tabs count as duplicates. */
   includePinned: boolean;
+  /** Whether pages with different query strings count as different pages. */
+  includeQuery: boolean;
 }
 
 /** Everything the user can configure. */
@@ -47,6 +49,7 @@ export const DEFAULT_BEHAVIOR: Behavior = {
   action: "prompt",
   scope: "all-windows",
   includePinned: true,
+  includeQuery: false,
 };
 
 export const DEFAULT_SETTINGS: Settings = { defaults: DEFAULT_BEHAVIOR, rules: {} };
@@ -67,10 +70,12 @@ function parseBehavior(value: unknown, fallback: Behavior): Behavior {
   const action: unknown = "action" in value ? value.action : undefined;
   const scope: unknown = "scope" in value ? value.scope : undefined;
   const includePinned: unknown = "includePinned" in value ? value.includePinned : undefined;
+  const includeQuery: unknown = "includeQuery" in value ? value.includeQuery : undefined;
   return {
     action: DUPLICATE_ACTIONS.find((a) => a === action) ?? fallback.action,
     scope: SEARCH_SCOPES.find((s) => s === scope) ?? fallback.scope,
     includePinned: typeof includePinned === "boolean" ? includePinned : fallback.includePinned,
+    includeQuery: typeof includeQuery === "boolean" ? includeQuery : fallback.includeQuery,
   };
 }
 

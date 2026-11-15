@@ -58,6 +58,16 @@
     />
     ピン留めタブも重複として扱う
   </label>
+
+  <span></span>
+  <label class="check">
+    <input
+      type="checkbox"
+      checked={behavior.includeQuery}
+      onchange={(event) => onChange({ ...behavior, includeQuery: event.currentTarget.checked })}
+    />
+    クエリ（? 以降）が同じときだけ重複として扱う
+  </label>
 </div>
 
 <style>

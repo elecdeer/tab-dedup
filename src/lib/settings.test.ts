@@ -9,7 +9,12 @@ import {
 } from "./settings";
 
 describe("resolveBehavior", () => {
-  const ignore: Behavior = { action: "ignore", scope: "current-window", includePinned: false };
+  const ignore: Behavior = {
+    action: "ignore",
+    scope: "current-window",
+    includePinned: false,
+    includeQuery: true,
+  };
   const settings: Settings = {
     defaults: DEFAULT_BEHAVIOR,
     rules: { "https://mail.example.com": ignore },
@@ -31,12 +36,18 @@ describe("resolveBehavior", () => {
 describe("parseSettings", () => {
   it("keeps valid settings as they are", () => {
     const settings: Settings = {
-      defaults: { action: "switch", scope: "current-window", includePinned: false },
+      defaults: {
+        action: "switch",
+        scope: "current-window",
+        includePinned: false,
+        includeQuery: true,
+      },
       rules: {
         "https://example.com": {
           action: "close-others",
           scope: "all-windows",
           includePinned: true,
+          includeQuery: false,
         },
       },
     };
@@ -50,19 +61,34 @@ describe("parseSettings", () => {
 
   it("replaces invalid fields with the defaults", () => {
     const result = parseSettings({
-      defaults: { action: "explode", scope: "current-window", includePinned: "yes" },
+      defaults: {
+        action: "explode",
+        scope: "current-window",
+        includePinned: "yes",
+        includeQuery: 1,
+      },
       rules: "nope",
     });
 
     expect(result).toEqual({
-      defaults: { action: "prompt", scope: "current-window", includePinned: true },
+      defaults: {
+        action: "prompt",
+        scope: "current-window",
+        includePinned: true,
+        includeQuery: false,
+      },
       rules: {},
     });
   });
 
   it("fills missing rule fields from the stored defaults", () => {
     const result = parseSettings({
-      defaults: { action: "ignore", scope: "current-window", includePinned: false },
+      defaults: {
+        action: "ignore",
+        scope: "current-window",
+        includePinned: false,
+        includeQuery: true,
+      },
       rules: { "https://example.com": { action: "switch" } },
     });
 
@@ -70,6 +96,19 @@ describe("parseSettings", () => {
       action: "switch",
       scope: "current-window",
       includePinned: false,
+      includeQuery: true,
     });
+  });
+
+  it("treats settings saved before includeQuery existed as ignoring the query", () => {
+    const result = parseSettings({
+      defaults: { action: "prompt", scope: "all-windows", includePinned: true },
+      rules: {
+        "https://example.com": { action: "ignore", scope: "all-windows", includePinned: true },
+      },
+    });
+
+    expect(result.defaults.includeQuery).toBe(false);
+    expect(result.rules["https://example.com"]?.includeQuery).toBe(false);
   });
 });
